@@ -120,7 +120,9 @@ namespace LinqExamplesForFreshers_ExperiencedIndepth.Controllers
             string resultData = name ?? "Guest";
 
 
-            //preparing the list of student data with dummy values(it will store student related data)
+            //preparing the list of student data with dummy data values(it will store student related data)
+            //this data not comming from database.
+            //we have created dummy model classes and prepared dummy data and used for Linq queries.
             var students = new List<Student>
             {
             new Student { StudentId = 1, Name = "Alice", CourseId = 101,StudentAddress="hyd" },
@@ -141,8 +143,8 @@ namespace LinqExamplesForFreshers_ExperiencedIndepth.Controllers
             Method syntax uses.Join()
             */
             //inner join Linq Query with alias names
-            var resultwithAliasNames = from s in students
-                         join c in courses
+            var resultwithAliasNames = from s in students   // _northwindContext.Student  (this is datasource)
+                                       join c in courses    //_northwindContext.courses
                          on s.CourseId equals c.CourseId
                          select new
                          {//here you can select required columns
@@ -162,7 +164,7 @@ namespace LinqExamplesForFreshers_ExperiencedIndepth.Controllers
                             c.CourseName,
                             s.StudentAddress
                          };
-            //same Query we can also write using lamda expressions way (inner join in linq query)
+            //same Query we can also write using lamda expressions(method) way (inner join in linq query)
            var LamdaQueryJoinresult = students.Join(
                     courses,
                     s => s.CourseId,        // outer key
@@ -195,6 +197,167 @@ namespace LinqExamplesForFreshers_ExperiencedIndepth.Controllers
             var result1 = JsonConvert.SerializeObject(resultwithoutAliasNmes);
             return StatusCode(StatusCodes.Status200OK, result);//here we are return data with statuscode.
         }
+
+        [HttpGet]
+        [Route("take(number) Usage")]
+        public async Task<IActionResult> TakeUsage()
+        {//this is one api method  or action method we are practising the linq queries here.how it will work.
+
+            //if you want to get the only first 5 records in a table use this take(number) method.
+            //select top 5 * from customers
+            var result = (from lstcustmer in _northwindContext.Customers select lstcustmer).Take(5);
+
+            //if you want to get only first 2 records in a table use this take(2) method.
+            var result2= (from lstcustmer in _northwindContext.Customers select lstcustmer).Take(2);
+
+
+            //It converts your data to jsonformat
+            var convertedData = JsonConvert.SerializeObject(result);
+            return StatusCode(StatusCodes.Status200OK, convertedData);
+
+        }
+
+        [HttpGet]
+        [Route("take(2) Usage")]
+        public async Task<IActionResult> Take2recordsonly()
+        {//this is one api method  or action method we are practising the linq queries here.how it will work.
+
+          
+
+            //if you want to get only first 2 records in a table use this take(2) method.
+            var result2 = (from lstcustmer in _northwindContext.Customers select lstcustmer).Take(2);
+
+
+            //It converts your data to jsonformat
+            var convertedData = JsonConvert.SerializeObject(result2);
+            return StatusCode(StatusCodes.Status200OK, convertedData);
+
+        }
+        [HttpGet]
+        [Route("Skip(number) Usage")]
+        public async Task<IActionResult> SkipUsage()
+        {
+            //if you want to get the only first 5 records in a table use this take(number) method.
+            //after using the take() method you can use skip() method .
+            //skip will skip or ignore the given count of records after taking the records.
+            //select top 5 * from customers
+            /*
+             * select * from Employees where City='Seattle'
+--where condition is used to filter the data purpose used.
+select Top 2 * from Customers
+select * from Customers --IT WILL DISPLAY TOTAL DATA
+--OFFSET IS USED TO SKIP THE THE RECORDS (OFFSET MEANS SKIP THE DATA)
+--FETCH NEXT IS USED TO FETCH THE DATA
+SELECT *FROM Customers ORDER BY CustomerId OFFSET 2 ROWS
+FETCH NEXT 10 ROWS ONLY;
+             * 
+             * 
+             */
+            var result = (from lstcustmer in _northwindContext.Customers select lstcustmer).Take(5).Skip(4);
+            //It converts your data to jsonformat
+            var convertedData = JsonConvert.SerializeObject(result);
+            return StatusCode(StatusCodes.Status200OK, convertedData);
+
+        }
+        [HttpGet]
+        [Route("AgeWithFilter")]
+        public async Task<IActionResult> AgeWithFilter()
+        {
+            //example with dummydata
+            List<StudentData> lststudentsObj = new List<StudentData>()
+            {//List with multiple objects declaring and assigning the data like this way
+               new StudentData() { StudentID = 1, StudentName = "John", Age = 13} ,//this is one object
+               new StudentData() { StudentID = 2, StudentName = "Moin",  Age = 21 } ,//this is one object
+               new StudentData() { StudentID = 3, StudentName = "Bill",  Age = 18 } ,//this is one object
+               new StudentData() { StudentID = 4, StudentName = "Ram" , Age = 20} ,//this is one object
+               new StudentData() { StudentID = 5, StudentName = "Ron" , Age = 15 }//this is one object
+            };
+            
+            var filteredResult = from s in lststudentsObj
+                                 where s.Age > 15 && s.Age <= 20
+                                 select new { FullName = s.StudentName };//giving the alisaname
+             //The above linq query converts into below SqlQuery
+             //Select StudentName from StudentData where Age>15 and Age<=20
+
+            //It converts your data to jsonformat
+            var convertedData = JsonConvert.SerializeObject(filteredResult);
+            return StatusCode(StatusCodes.Status200OK, convertedData);
+
+        }
+        [HttpGet]
+        [Route("OrderByusage")]
+        public async Task<IActionResult> OrderbyUsage()
+        {
+            //example with dummydata
+            List<StudentData> lststudentsObj = new List<StudentData>()
+            {
+               new StudentData() { StudentID = 1, StudentName = "John", Age = 13} ,
+               new StudentData() { StudentID = 2, StudentName = "Moin",  Age = 21 } ,
+               new StudentData() { StudentID = 3, StudentName = "Bill",  Age = 18 } ,
+               new StudentData() { StudentID = 4, StudentName = "Ram" , Age = 20} ,
+               new StudentData() { StudentID = 5, StudentName = "Ron" , Age = 15 }
+            };
+            var orderByAscendingResult = from s in lststudentsObj
+                                         orderby s.StudentName ascending //small values to big values.
+                                         select s;
+
+            var orderByDescendingResult = from s in lststudentsObj
+                                          orderby s.StudentName descending //big to small values.
+                                          select s;
+            //It converts your data to jsonformat
+            var convertedData = JsonConvert.SerializeObject(orderByDescendingResult);
+            return StatusCode(StatusCodes.Status200OK, convertedData);
+
+        }
+        [HttpGet]
+        [Route("GroupByusage")]
+        public async Task<IActionResult> GroupByusage()
+        {
+            //example with dummydata
+            List<StudentData> lststudentsObj = new List<StudentData>()
+            {//IT IS A LIST ,DUE TO THAT IT WILL STORE MULTIPLE STUDENTDATA MODEL CLASS DATA STORE
+               new StudentData() { StudentID = 1, StudentName = "John", Age = 13} ,
+               new StudentData() { StudentID = 2, StudentName = "Moin",  Age = 13 } ,
+               new StudentData() { StudentID = 3, StudentName = "Bill",  Age = 18 } ,
+               new StudentData() { StudentID = 4, StudentName = "Ram" , Age = 20} ,
+               new StudentData() { StudentID = 5, StudentName = "Ron" , Age = 15 }
+            };
+            //METHOD SYNATX USGE
+            var groupedStudents = lststudentsObj.GroupBy(s => s.Age)
+                                     .Select(g => new { Age = g.Key, Students = g.ToList() });
+            //It converts your data to jsonformat
+            var convertedData = JsonConvert.SerializeObject(groupedStudents);
+            return StatusCode(StatusCodes.Status200OK, convertedData);
+
+        }
+        [HttpGet]
+        [Route("GroupByusageWithCount")]
+        public async Task<IActionResult> GroupByusageWithCount()
+        {
+            //example with dummydata
+            // Define a list of fruits
+            List<string> fruits = new List<string>  //IT WILL STORE STRING TYPE OF DATA ONLY
+            {
+            "apple", "banana", "orange", "apple", "grape", "banana", "apple"
+            };
+
+            // Group the fruits using Query syntax(RealTime Usethis one)
+            var groupedFruits = fruits.GroupBy(f => f)
+                          .Select(g => new { Fruit = g.Key, Count = g.Count() });
+
+            // Group the fruits using method syntax
+            var fruitsGrouped1 = fruits.GroupBy(fruit => fruit);
+
+            // Print the grouped fruits
+            foreach (var group in fruitsGrouped1)
+            {
+                Console.WriteLine($"Fruit: {group.Key}, Count: {group.Count()}");
+            }
+            //It converts your data to jsonformat
+            var convertedData = JsonConvert.SerializeObject(groupedFruits);
+            return StatusCode(StatusCodes.Status200OK, convertedData);
+
+        }
     }
 }
 /* 
@@ -207,7 +370,7 @@ all packages use same version for better performance and to avoid any compatibil
 To extract the data,we need to use linq queries. 
 Linq queries are of two types.
 1. Query syntax
-2. Method syntax
+2. Method syntax (in Mehod syantx we will used lamdaopertor => goes to )
 Query syntax is similar to sql queries and
 method syntax is similar to c# programming language.
 ==========DB FIRST APPROACH IMPLEMENATTION========================
@@ -264,3 +427,66 @@ Console.WriteLine(result);
 
 Guest
  */
+/*
+In Microsoft SQL Server, OFFSET and FETCH are used for pagination—i.e., 
+skipping a set of rows and returning the next set.
+
+🔹 Basic Syntax
+SELECT column1, column2
+FROM table_name
+ORDER BY column_name
+OFFSET <number_of_rows_to_skip> ROWS
+FETCH NEXT <number_of_rows_to_return> ROWS ONLY;
+🔹 Example Table
+
+Assume a table:
+
+Employees (EmployeeID, Name, Salary)
+🔹 Example 1: Skip first 5 rows, fetch next 10
+SELECT *
+FROM Employees
+ORDER BY EmployeeID
+OFFSET 5 ROWS
+FETCH NEXT 10 ROWS ONLY;
+
+👉 This means:
+
+Skip first 5 rows
+Return next 10 rows
+🔹 Example 2: First page (no skip)
+SELECT *
+FROM Employees
+ORDER BY EmployeeID
+OFFSET 0 ROWS
+FETCH NEXT 10 ROWS ONLY;
+🔹 Example 3: Pagination (Page 3, page size 10)
+DECLARE @PageNumber INT = 3;
+DECLARE @PageSize INT = 10;
+
+SELECT *
+FROM Employees
+ORDER BY EmployeeID
+OFFSET (@PageNumber - 1) * @PageSize ROWS
+FETCH NEXT @PageSize ROWS ONLY;
+🔹 Important Rules
+ORDER BY is mandatory when using OFFSET FETCH
+OFFSET must be ≥ 0
+FETCH is optional, but OFFSET is required if FETCH is used
+Introduced in SQL Server 2012+
+🔹 When to Use
+Pagination in applications (web pages, APIs)
+Efficient data browsing
+Replacing older methods like ROW_NUMBER()
+🔹 Alternative (Older Method)
+
+Before SQL Server 2012:
+
+WITH CTE AS (
+    SELECT *, ROW_NUMBER() OVER (ORDER BY EmployeeID) AS RowNum
+    FROM Employees
+)
+SELECT *
+FROM CTE
+WHERE RowNum BETWEEN 6 AND 15;
+======================================
+*/
