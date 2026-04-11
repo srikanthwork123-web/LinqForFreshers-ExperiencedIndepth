@@ -14,6 +14,8 @@ builder.Services.AddSwaggerGen();
 //if you are not registered these context classes it will throw error.
 builder.Services.AddDbContext<NorthwindContext>();//NorthwindContext
 builder.Services.AddDbContext<NorthwindDbContext>();//NorthwindDbContext
+//enable the xml format .if you want to return xml data use below line
+builder.Services.AddControllers().AddXmlSerializerFormatters();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
